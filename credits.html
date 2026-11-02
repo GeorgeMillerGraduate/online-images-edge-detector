@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Edge Detection Studio — Notes &amp; credits</title>
+    <link rel="stylesheet" href="css/style.css?v=edge-1" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a aria-label="Jenga-Code homepage" class="brand" href="/"
+        ><svg
+          aria-hidden="true"
+          class="compass-mark"
+          height="54"
+          viewBox="0 0 64 64"
+          width="54"
+        >
+          <circle
+            cx="32"
+            cy="32"
+            fill="none"
+            r="23"
+            stroke="currentColor"
+            stroke-width="1"
+          ></circle>
+          <path
+            d="M32 2 38 26 62 32 38 38 32 62 26 38 2 32 26 26Z"
+            fill="none"
+            stroke="currentColor"
+          ></path>
+          <path
+            d="M32 7 32 32 26 26ZM57 32 32 32 38 26ZM32 57 32 32 38 38ZM7 32 32 32 26 38Z"
+            fill="currentColor"
+          ></path>
+          <circle cx="32" cy="32" fill="currentColor" r="3"></circle></svg
+        ><span
+          >Jenga-Code<small
+            >ALGORITHMS · GAMES · MATHEMATICAL IDEAS</small
+          ></span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="/">Home</a><a aria-current="page" href="/apps/">Applications</a
+        ><a href="/blog/">Journal</a
+        ><a href="/qualifications/">Qualifications</a>
+      </nav>
+      <div class="masthead-art" aria-hidden="true"></div>
+    </header>
+    <main class="credits">
+      <a href="./">← Return to Edge Detection Studio</a>
+      <h1>From light to structure.</h1>
+      <h2>One image, three filters</h2>
+      <p>
+        The image is processed locally at a maximum longest side of 960 pixels.
+        Transparent areas are composited onto white. Grayscale uses 0.2126 R +
+        0.7152 G + 0.0722 B on browser-decoded channel values. This is an
+        educational approximation, without linear-light colour conversion.
+      </p>
+      <ul>
+        <li>
+          <strong>Sobel:</strong> optional separable Gaussian smoothing, 3×3
+          horizontal and vertical derivatives, Euclidean magnitude divided by
+          four and clipped to 255, a response threshold, then display gain.
+        </li>
+        <li>
+          <strong>Canny:</strong> the same smoothing and gradients,
+          four-direction non-maximum suppression, double thresholds and
+          8-connected hysteresis. Weak responses survive only if connected to a
+          strong response. This local implementation is not claimed to be
+          bit-identical to OpenCV.
+        </li>
+        <li>
+          <strong>Centre–surround:</strong> the mean in a uniform circular disc
+          minus the mean in a concentric surrounding annulus. ON keeps positive
+          responses, OFF keeps negative responses, Both takes the absolute
+          value. Thresholding precedes gain. The outer radius is always greater
+          than the inner radius.
+        </li>
+      </ul>
+      <p>
+        The centre–surround filter illustrates spatial antagonism inspired by
+        retinal receptive fields. It is neither a complete retinal model nor a
+        detector specifically for circular objects. It uses hard disc/ring
+        weights, rather than a Difference of Gaussians. The diagram is
+        schematic; + and − show the ON-centre convention and reverse for OFF.
+      </p>
+      <p>
+        Gaussian convolution replicates edge pixels. Sobel and Canny leave the
+        outer one-pixel border at zero. Circular regions at image boundaries are
+        truncated and separately normalised by their available pixel counts. The
+        measured nonzero fraction describes the chosen filter response, not a
+        universal estimate of the number of true edges.
+      </p>
+      <h2>George Miller’s scan orders</h2>
+      <p>
+        The reveal priorities are JavaScript adaptations of George Miller’s
+        supplied Java Mandelbrot project, copyright 2025. The original MIT
+        notice is retained in
+        <a href="SCANORDER-LICENSE.txt">SCANORDER-LICENSE.txt</a>. Original
+        reference classes are included in <code>scanorder-source/</code>, for
+        example
+        <a href="scanorder-source/RadialOrderer.java">RadialOrderer.java</a>.
+      </p>
+      <p>
+        Available orders: Simple, Radial, Spiral, Diamond, Angular, Flower,
+        Square spiral, Triangle XOR, XOR and Pythagoras. Pythagoras retains the
+        original bitwise AND priority x &amp; y; it is not a Euclidean distance.
+        Spiral preserves Java’s truncation toward zero. Equal priorities
+        preserve row-major order, matching stable Java sorting. Bands, petals
+        and spiral thickness are adjustable. The reveal moves through sorted
+        pixels at a steady fraction per second: radial motion therefore has a
+        changing geometric speed.
+      </p>
+      <p>
+        Only display order changes. Every scan produces exactly the same final
+        filtered result. Backward scrubbing restores original pixels. Palette
+        changes preserve progress. Filter or scan changes reset to the
+        photograph and prepare a new result. The complete edge map is exported
+        even when the on-screen reveal is paused halfway.
+      </p>
+      <h2>Artwork</h2>
+      <ul>
+        <li>
+          <strong>Stone bridge:</strong> AI-generated sample photograph created
+          for this demonstration, October 2026. It does not document a verified
+          real place. It is cropped to landscape format and served as WebP. Its
+          edge maps are genuinely computed from the bundled photograph.
+        </li>
+        <li>
+          <strong>Optics study:</strong> bespoke AI-generated camera-lens and
+          nautilus engraving.
+        </li>
+        <li>
+          <strong>Optics masthead:</strong> bespoke AI-generated lens-and-ray
+          engraving.
+        </li>
+      </ul>
+      <p>
+        All three images were created for Jenga-Code. No external stock images
+        are bundled. The concentric-field diagram is code-drawn SVG. The compass
+        SVG matches the shared Jenga-Code masthead. Cormorant Garamond and DM
+        Sans are optionally loaded from Google Fonts, with system fallbacks.
+      </p>
+      <h2>Further reading</h2>
+      <ul>
+        <li>
+          <a
+            href="https://docs.opencv.org/4.12.0/d7/de1/tutorial_js_canny.html"
+            target="_blank"
+            rel="noopener"
+            >OpenCV — Canny Edge Detection</a
+          >, for the processing stages. OpenCV code is not bundled.
+        </li>
+        <li>
+          <a
+            href="https://www.ncbi.nlm.nih.gov/books/NBK11550/"
+            target="_blank"
+            rel="noopener"
+            >Webvision — Visual Responses of Ganglion Cells</a
+          >, for the biological background to centre–surround receptive fields.
+        </li>
+      </ul>
+      <h2>Privacy &amp; limits</h2>
+      <p>
+        Uploads remain in the page’s memory; they are not uploaded to a service.
+        Supported inputs: PNG, JPEG and WebP, up to 20 MB and 40 megapixels
+        before resizing. A worker performs filtering and sorting. Large inputs
+        still require browser decoding before the size check and can briefly use
+        substantial memory. No API key, external image-processing runtime or
+        Java installation is needed. Serve through HTTP(S), rather than opening
+        index.html directly, so workers load correctly.
+      </p>
+      <p><a href="./">Return to the studio ↗</a></p>
+    </main>
+  </body>
+</html>

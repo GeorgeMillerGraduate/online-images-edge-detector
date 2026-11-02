@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Reveal Sobel, Canny and centre-surround image filters with George Miller's Mandelbrot scan orders."
+    />
+    <title>Edge Detection Studio — Jenga-Code</title>
+    <link rel="stylesheet" href="css/style.css?v=edge-1" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to image</a>
+    <header class="site-header">
+      <a aria-label="Jenga-Code homepage" class="brand" href="/"
+        ><svg
+          aria-hidden="true"
+          class="compass-mark"
+          height="54"
+          viewBox="0 0 64 64"
+          width="54"
+        >
+          <circle
+            cx="32"
+            cy="32"
+            fill="none"
+            r="23"
+            stroke="currentColor"
+            stroke-width="1"
+          ></circle>
+          <path
+            d="M32 2 38 26 62 32 38 38 32 62 26 38 2 32 26 26Z"
+            fill="none"
+            stroke="currentColor"
+          ></path>
+          <path
+            d="M32 7 32 32 26 26ZM57 32 32 32 38 26ZM32 57 32 32 38 38ZM7 32 32 32 26 38Z"
+            fill="currentColor"
+          ></path>
+          <circle cx="32" cy="32" fill="currentColor" r="3"></circle></svg
+        ><span
+          >Jenga-Code<small
+            >ALGORITHMS · GAMES · MATHEMATICAL IDEAS</small
+          ></span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="/">Home</a><a aria-current="page" href="/apps/">Applications</a
+        ><a href="/blog/">Journal</a
+        ><a href="/qualifications/">Qualifications</a>
+      </nav>
+      <div class="masthead-art" aria-hidden="true"></div>
+    </header>
+    <main id="main" class="publication">
+      <aside class="left-column">
+        <p class="eyebrow">Computer vision</p>
+        <h1>Edge Detection</h1>
+        <p class="subtitle">From light to structure.</p>
+        <nav class="methods" aria-label="Edge detection methods">
+          <button data-method="sobel" aria-pressed="false">
+            Sobel <small>Brightness gradients</small></button
+          ><button data-method="canny" aria-pressed="false">
+            Canny <small>Thin connected edges</small></button
+          ><button data-method="centre" aria-pressed="true">
+            Centre–surround <small>Local contrast</small>
+          </button>
+        </nav>
+        <div id="retinaDiagram">
+          <svg viewBox="0 0 240 180" role="img" aria-labelledby="diagramTitle">
+            <title id="diagramTitle">
+              Retina-inspired centre-surround field: a small positive central
+              disc and a negative surrounding ring
+            </title>
+            <circle
+              cx="110"
+              cy="85"
+              r="68"
+              fill="#9db2b8"
+              fill-opacity=".55"
+              stroke="#244d61"
+              stroke-width="1"
+            />
+            <circle
+              id="centreCircle"
+              cx="110"
+              cy="85"
+              r="23"
+              fill="#c28b62"
+              stroke="#934d27"
+              stroke-width="1"
+            />
+            <text x="110" y="90" text-anchor="middle" fill="#61321b">+</text>
+            <text x="110" y="140" text-anchor="middle" fill="#244d61">−</text>
+            <path
+              d="M110 85 197 55M166 116 202 130"
+              stroke="#746d5d"
+              stroke-width=".6"
+            />
+            <text x="175" y="45" font-size="12" fill="#61321b">Centre</text>
+            <text x="181" y="145" font-size="12" fill="#244d61">Surround</text>
+          </svg>
+          <p class="small">Retina-inspired contrast filter</p>
+        </div>
+        <p id="methodNote" class="method-note">
+          The centre disc is compared with its surrounding ring. This is a
+          simplified spatial model, not a simulation of the whole retina.
+        </p>
+        <figure class="study">
+          <img
+            src="images/optics-study.webp"
+            width="600"
+            height="900"
+            alt="Engraved camera lens and nautilus shell with optical construction lines"
+          />
+          <figcaption>A lens observes.<br />A pattern emerges.</figcaption>
+        </figure>
+        <a class="credit-link" href="credits.html"
+          >Algorithms, artwork &amp; credits ↗</a
+        >
+      </aside>
+      <section class="centre" aria-labelledby="studioTitle">
+        <h2 id="studioTitle">Reveal the edges</h2>
+        <p class="intro">One photograph. Watch its structure emerge.</p>
+        <div class="image-frame" id="dropZone">
+          <canvas
+            id="imageCanvas"
+            width="960"
+            height="640"
+            role="img"
+            aria-label="One photo transitioning in place into its computed edge map"
+          ></canvas>
+          <div id="loading" class="loading">Loading the sample photograph…</div>
+        </div>
+        <div class="image-caption">
+          <span id="methodCaption">Centre–surround</span
+          ><span id="revealCaption">Original · 0%</span>
+        </div>
+        <div class="toolbar">
+          <button id="play" class="primary" disabled>▶ Play transition</button
+          ><button id="pause" disabled>Ⅱ Pause</button
+          ><button id="replay" disabled>↻ Replay</button
+          ><button id="original" disabled>Original</button
+          ><button id="edges" disabled>Edges</button>
+        </div>
+        <label class="scrub"
+          ><span class="sr">Transition progress</span
+          ><input
+            id="progress"
+            aria-label="Transition progress"
+            type="range"
+            min="0"
+            max="1000"
+            value="0"
+            disabled
+          /><output id="percent">0%</output></label
+        >
+        <p class="status" id="status" role="status">
+          Preparing the photograph and edge map.
+        </p>
+        <section class="reveal-controls">
+          <div>
+            <label for="scan">Reveal order</label
+            ><select id="scan">
+              <option value="radial">Radial · centre out</option>
+              <option value="spiral">Spiral bands</option>
+              <option value="diamond">Diamond</option>
+              <option value="angular">Angular bands</option>
+              <option value="flower">Flower</option>
+              <option value="square">Square spiral</option>
+              <option value="triangle">Triangle XOR</option>
+              <option value="xor">XOR</option>
+              <option value="pythagoras">Pythagoras · bitwise AND</option>
+              <option value="simple">Simple · scanlines</option>
+            </select>
+          </div>
+          <div>
+            <label for="duration"
+              >Transition duration
+              <output id="durationValue">5 s</output></label
+            ><input
+              id="duration"
+              type="range"
+              min="1"
+              max="15"
+              value="5"
+              step="1"
+            />
+          </div>
+          <div id="scanParameterField" hidden>
+            <label for="scanParameter" id="scanParameterLabel">Bands</label
+            ><input
+              id="scanParameter"
+              type="number"
+              min="1"
+              max="16"
+              value="6"
+            />
+          </div>
+        </section>
+        <p class="caption">
+          The image stays fixed. Only the reveal order changes.
+        </p>
+        <div class="measurements">
+          <span id="dimensions">—</span><span id="edgeCount">—</span
+          ><span id="timing">—</span>
+        </div>
+        <details class="notes">
+          <summary>About the filters &amp; transitions</summary>
+          <p>
+            Filter changes prepare a new edge map and reset the reveal to the
+            original photograph. The scan order changes only how that map
+            appears; it never changes the computed edges. Images are processed
+            at a maximum longest side of 960 pixels.
+          </p>
+          <p>
+            Centre–surround uses a normalised circular disc minus a surrounding
+            annulus. ON detects a brighter centre, OFF a darker centre, and Both
+            uses the absolute response. This is a simple retina-inspired
+            contrast operator, not a circular shape detector.
+          </p>
+          <p>
+            All ten scan priorities are adapted from George Miller’s Java
+            Mandelbrot renderer.
+            <a href="credits.html">Read the exact conventions and credits ↗</a>
+          </p>
+        </details>
+      </section>
+      <aside class="right-column">
+        <p class="eyebrow">Image &amp; filter</p>
+        <h2>Find the structure</h2>
+        <button class="primary upload" id="upload">↑ Upload photo</button
+        ><input
+          id="file"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+        />
+        <p class="small" id="fileName">Stone bridge · generated sample photo</p>
+        <button id="sample">Use stone bridge sample</button>
+        <p class="small">Drop a PNG, JPG or WebP onto the image.</p>
+        <div id="centreFields">
+          <div class="control">
+            <label for="inner">Centre radius</label>
+            <div class="control-row">
+              <input
+                id="inner"
+                type="range"
+                min="1"
+                max="12"
+                step="1"
+                value="3"
+              /><input
+                id="innerNumber"
+                aria-label="Centre radius value"
+                type="number"
+                min="1"
+                max="12"
+                step="1"
+                value="3"
+              />
+            </div>
+          </div>
+          <div class="control">
+            <label for="outer">Surround radius</label>
+            <div class="control-row">
+              <input
+                id="outer"
+                type="range"
+                min="2"
+                max="24"
+                step="1"
+                value="9"
+              /><input
+                id="outerNumber"
+                aria-label="Surround radius value"
+                type="number"
+                min="2"
+                max="24"
+                step="1"
+                value="9"
+              />
+            </div>
+          </div>
+          <label class="select-label" for="polarity">Response</label
+          ><select id="polarity">
+            <option value="both">Both polarities</option>
+            <option value="on">ON · bright centre</option>
+            <option value="off">OFF · dark centre</option>
+          </select>
+        </div>
+        <div id="thresholdField">
+          <div class="control">
+            <label for="threshold">Response threshold</label>
+            <div class="control-row">
+              <input
+                id="threshold"
+                type="range"
+                min="1"
+                max="100"
+                step="1"
+                value="10"
+              /><input
+                id="thresholdNumber"
+                aria-label="Response threshold value"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                value="10"
+              />
+            </div>
+          </div>
+        </div>
+        <div id="cannyFields" hidden>
+          <div class="control">
+            <label for="low">Low threshold</label>
+            <div class="control-row">
+              <input
+                id="low"
+                type="range"
+                min="1"
+                max="200"
+                step="1"
+                value="12"
+              /><input
+                id="lowNumber"
+                aria-label="Low threshold value"
+                type="number"
+                min="1"
+                max="200"
+                step="1"
+                value="12"
+              />
+            </div>
+          </div>
+          <div class="control">
+            <label for="high">High threshold</label>
+            <div class="control-row">
+              <input
+                id="high"
+                type="range"
+                min="1"
+                max="255"
+                step="1"
+                value="30"
+              /><input
+                id="highNumber"
+                aria-label="High threshold value"
+                type="number"
+                min="1"
+                max="255"
+                step="1"
+                value="30"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="control">
+          <label for="sigma">Gaussian smoothing</label>
+          <div class="control-row">
+            <input
+              id="sigma"
+              type="range"
+              min="0"
+              max="2"
+              step="0.2"
+              value="0.8"
+            /><input
+              id="sigmaNumber"
+              aria-label="Gaussian smoothing value"
+              type="number"
+              min="0"
+              max="2"
+              step="0.2"
+              value="0.8"
+            />
+          </div>
+        </div>
+        <div id="gainField">
+          <div class="control">
+            <label for="gain">Response gain</label>
+            <div class="control-row">
+              <input
+                id="gain"
+                type="range"
+                min="1"
+                max="8"
+                step="0.5"
+                value="3"
+              /><input
+                id="gainNumber"
+                aria-label="Response gain value"
+                type="number"
+                min="1"
+                max="8"
+                step="0.5"
+                value="3"
+              />
+            </div>
+          </div>
+        </div>
+        <fieldset class="palette">
+          <legend>Edge palette</legend>
+          <button data-palette="ivory" aria-pressed="true">
+            <i class="ivory-swatch"></i>Ivory on navy</button
+          ><button data-palette="ink" aria-pressed="false">
+            <i class="ink-swatch"></i>Ink on paper</button
+          ><button data-palette="copper" aria-pressed="false">
+            <i class="copper-swatch"></i>Copper on paper
+          </button>
+        </fieldset>
+        <button id="save" class="primary upload" disabled>
+          ↓ Save edge map
+        </button>
+        <p class="small">
+          Processed locally in your browser. Your uploaded photo is never sent
+          to a server.
+        </p>
+        <a class="credit-link" href="credits.html"
+          >Code, scan orders &amp; credits ↗</a
+        >
+      </aside>
+    </main>
+    <footer>
+      <span>Jenga-Code / Computer vision</span
+      ><a href="/apps/">All applications ↗</a>
+    </footer>
+    <script src="js/app.js?v=edge-1"></script>
+  </body>
+</html>
